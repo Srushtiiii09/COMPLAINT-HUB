@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Registry</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #ecf5ec;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        form > div {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        textarea,
+        input[type="number"],
+        input[type="date"],
+        input[type="time"],
+        input[type="email"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .status-pending {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .status-approved {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .status-rejected {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 5px;
+        }
+
+        /* New CSS for side-by-side layout */
+       /* Existing CSS styles */
+
+/* New CSS for side-by-side layout */
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 0 auto;
+    max-width: 1200px; /* Adjust as needed */
+    padding: 0 20px;
+}
+
+.form-container {
+    flex-basis: calc(50% - 20px);
+    margin-bottom: 20px;
+    background-color: #fff; /* Set form container background color */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add box shadow */
+}
+
+/* Existing CSS styles */
+
+    </style>
+</head>
+<body>
+  <h1>Complaint Registry</h1>
+
+  <div class="container">
+      <div class="form-container">
+          <h2>File a Complaint</h2>
+          <form id="complaintForm">
+              <!-- Complaint form fields -->
+              <div>
+                  <label for="title">Title:</label>
+                  <input type="text" id="title" required>
+              </div>
+              <div>
+                  <label for="description">Description:</label>
+                  <textarea id="description" rows="4" cols="50" required></textarea>
+              </div>
+              <div>
+                  <label for="name">Your Name:</label>
+                  <input type="text" id="name" required>
+              </div>
+              <div>
+                  <label for="contactAddress">Contact Address:</label>
+                  <input type="text" id="contactAddress" required>
+              </div>
+              <div>
+                  <label for="contactNumber">Contact Number:</label>
+                  <input type="text" id="contactNumber" required>
+              </div>
+              <div>
+                  <label for="email">Email:</label>
+                  <input type="email" id="email" required>
+              </div>
+              <div>
+                  <label for="incidentLocation">Incident Location:</label>
+                  <input type="text" id="incidentLocation" required>
+              </div>
+              <div>
+                  <label for="date">Date:</label>
+                  <input type="date" id="date" required>
+              </div>
+              <div>
+                  <label for="time">Time:</label>
+                  <input type="time" id="time" required>
+              </div>
+              <button type="button" onclick="submitComplaint()">File Complaint</button>
+          </form>
+      </div>
+      <div class="form-container">
+          <h2>Search Complaint Status by ID</h2>
+          <form id="searchForm">
+              <!-- Search form fields -->
+              <div>
+                  <label for="complaintId">Complaint ID:</label>
+                  <input type="number" id="complaintId" required>
+              </div>
+              <button type="button" onclick="searchComplaint()">Search</button>
+              <h2>Complaint Status</h2>
+              <div id="complaintStatus"></div>
+              <div id="searchResult"></div>
+          </form>
+      </div>
+  </div>
+  <button onclick="speakComplaintStatus()">Speak Complaint Status</button>
+
+  <!-- JavaScript and additional HTML content -->
+</body>
+
+
+    <script>
+
+       const contractABI =[
+  {
+    "type": "constructor",
+    "name": "",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_officer",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ComplaintDiscarded",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "approvalRemark",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "complaintFiled",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "address",
+        "name": "complaintRegisteredBy",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "type": "string",
+        "name": "title",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "Complaints",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "tuple",
+        "name": "generalData",
+        "components": [
+          {
+            "type": "string",
+            "name": "title",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "description",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "contactNumber",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "email",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "incidentLocation",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "date",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "time",
+            "internalType": "string"
+          }
+        ],
+        "internalType": "struct HelloWorld.ComplaintGeneralData"
+      },
+      {
+        "type": "tuple",
+        "name": "approvalData",
+        "components": [
+          {
+            "type": "string",
+            "name": "approvalRemark",
+            "internalType": "string"
+          },
+          {
+            "type": "bool",
+            "name": "isApproved",
+            "internalType": "bool"
+          }
+        ],
+        "internalType": "struct HelloWorld.ComplaintApprovalData"
+      },
+      {
+        "type": "tuple",
+        "name": "resolutionData",
+        "components": [
+          {
+            "type": "string",
+            "name": "resolutionRemark",
+            "internalType": "string"
+          },
+          {
+            "type": "bool",
+            "name": "isResolved",
+            "internalType": "bool"
+          }
+        ],
+        "internalType": "struct HelloWorld.ComplaintResolutionData"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "approveComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "_approvalRemark",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "discardComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "_approvalRemark",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "displayComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "string",
+        "name": "_title",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_description",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_name",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_contactNumber",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_email",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_incidentLocation",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_date",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_time",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "fileComplaint",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "_title",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_description",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_name",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_contactNumber",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_email",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_incidentLocation",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_date",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_time",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "nextId",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "officer",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingApprovals",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingResolutions",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "resolveComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "_resolutionRemark",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "resolvedCases",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setOfficerAddress",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_officer",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+];
+        // Contract address
+        // const contractAddress = '0x2A58878748AE15Caf9e5C6d2596e3bEf14326f83';
+        const contractAddress="0xF6739FBBd457E8C39bB1650ec21c28376235Db3E";
+
+        // Connect to the Ethereum network using Web3.js
+        let web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+
+        // Load the contract
+        let contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Function to fetch and display complaint status
+        async function fetchComplaintStatus() {
+            // Implementation for fetching and displaying complaint status
+        }
+
+        
+        async function submitComplaint() {
+            try {
+                // Check if MetaMask is installed
+                if (typeof ethereum === 'undefined') {
+                    alert("Please install MetaMask extension to use this feature.");
+                    return;
+                }
+
+                // Request accounts from MetaMask
+                let accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                let address = accounts[0];
+                let title = document.getElementById("title").value;
+                let description = document.getElementById("description").value;
+                let name = document.getElementById("name").value;
+                let contactNumber = document.getElementById("contactNumber").value;
+                let email = document.getElementById("email").value;
+                let incidentLocation = document.getElementById("incidentLocation").value;
+                let date = document.getElementById("date").value;
+                let time = document.getElementById("time").value;
+
+                // Call the fileComplaint function in the smart contract
+                await contract.methods.fileComplaint(
+                    title, description, name, contactNumber, email, incidentLocation, date, time
+                ).send({ from: address });
+
+                // Display success message
+                let complaintId = await contract.methods.nextId().call();
+                alert(`Complaint registered successfully! ID: ${complaintId - 1}\nYour address: ${address}`);
+
+                // Optionally, you can reset the form after submission
+                document.getElementById("complaintForm").reset();
+            } catch (error) {
+                console.error(error);
+                alert("Error filing complaint");
+            }
+        }
+
+//         async function searchComplaint() {
+//     try {
+//         let complaintId = document.getElementById("complaintId").value;
+//         let complaint = await contract.methods.complaintDetails(complaintId).call();
+//         let complainttitle = await contract.methods.Complaints(complaintId).call();
+
+//         let searchResultDiv = document.getElementById("searchResult");
+//         searchResultDiv.innerHTML = `
+//             <div class="status-box">
+//                 <div class="status-render-container md:w-[600px]">
+//                     <p class='status-render-title'>Complaint Details:</p>
+//                     <p class='status-render-text'>Complaint Id: ${complaintId}</p>
+//                     <p class='status-render-text'>Complaint by: ${complainttitle.complaintRegisteredBy}</p>
+//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
+//                     <p class='status-render-text'>Complaint by: ${complaint.name}</p>
+//                     <p class='status-render-text'>Complaint Title: ${complaint.title}</p>
+//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
+//                     <p class='status-render-text'>Contact Number: ${complaint.contactNumber}</p>
+//                     <p class='status-render-text'>Email: ${complaint.email}</p>
+//                     <p class='status-render-text'>Incident Location: ${complaint.incidentLocation}</p>
+//                     <p class='status-render-text'>Date: ${complaint.date}</p>
+//                     <p class='status-render-text'>Time: ${complaint.time}</p>
+//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
+//                         <p class='status-render-text'>Approval Status: ${complaint.isApproved ? "Approved" : !complaint.exists ? "Declined" : "Approval Pending"}</p>
+//                         <p class='status-render-text'>Approval Remark: ${complaint.isApproved ? complaint.approvalRemark : ''}</p>
+//                         <p class='status-render-text'>Resolution Status: ${complaint.isResolved ? "Resolved" : "Resolution pending"}</p>
+//                         <p class='status-render-text mb-2'>Resolution Remark: ${complaint.isResolved ? complaint.resolutionRemark : ''}</p>
+//                 </div>
+//             </div>
+//         `;
+//     } catch (error) {
+//         console.error(error);
+//         alert("Error searching for complaint");
+//     }
+// }
+
+async function searchComplaint() {
+    try {
+        let complaintId = document.getElementById("complaintId").value;
+        let complaint = await contract.methods.Complaints(complaintId).call();
+
+        let searchResultDiv = document.getElementById("searchResult");
+        searchResultDiv.innerHTML = `
+            <div class="status-box">
+                <div class="status-render-container md:w-[600px]">
+                    <p class='status-render-title'>Complaint Details:</p>
+                    <p class='status-render-text'>Complaint Id: ${complaintId}</p>
+                    <p class='status-render-text'>Complaint Title: ${complaint.generalData.title}</p>
+                    <p class='status-render-text'>Complaint by: ${complaint.generalData.name}</p>
+                    <p class='status-render-text'>Complaint Description: ${complaint.generalData.description}</p>
+                    <p class='status-render-text'>Contact Number: ${complaint.generalData.contactNumber}</p>
+                    <p class='status-render-text'>Email: ${complaint.generalData.email}</p>
+                    <p class='status-render-text'>Incident Location: ${complaint.generalData.incidentLocation}</p>
+                    <p class='status-render-text'>Date: ${complaint.generalData.date}</p>
+                    <p class='status-render-text'>Time: ${complaint.generalData.time}</p>
+                    <p class='status-render-text'>Approval Status: ${complaint.approvalData.isApproved ? "Approved" : complaint.approvalData.approvalRemark ? "Approval Pending" }</p>
+                    <p class='status-render-text'>Approval Remark: ${complaint.approvalData.approvalRemark}</p>
+                    <p class='status-render-text'>Resolution Status: ${complaint.resolutionData.isResolved ? "Resolved" : "Resolution pending"}</p>
+                    <p class='status-render-text'>Resolution Remark: ${complaint.resolutionData.resolutionRemark}</p>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error(error);
+        alert("Error searching for complaint");
+    }
+}
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.5/dist/web3.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ecf5ec
+          
+          }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .status-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .status-render-container {
+            max-width: 600px;
+        }
+
+        .status-render-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .status-render-text {
+            margin-bottom: 5px;
+        }
+
+        .mb-2 {
+            margin-bottom: 10px;
+        }
+
+        .error {
+            color: #ff0000;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .button-container {
+    display: flex;
+}
+
+.button-container button {
+    flex: 1;
+    margin-right: 10px; /* Adjust the margin as needed */
+}
+
+.button-container {
+    display: flex;
+    margin-top: 20px;
+    justify-content: space-between; /* Align buttons evenly */
+}
+
+.container {
+    max-width: 1000px; /* Increased width for side-by-side layout */
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap */
+}
+
+.search-container, .form-container {
+    flex: 1 1 45%; /* Adjusted width for side-by-side layout */
+    margin-right: 20px; /* Added margin between sections */
+    margin-bottom: 20px; /* Added margin for spacing */
+}
+
+.search-container {
+    margin-right: 20px; /* Added margin for spacing */
+}
+
+.search-container input[type="text"] {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-container input[type="text"] {
+    width: calc(100% - 20px);
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+
+
+
+
+
+    </style>
+</head>
+<body>
+  <h1>Complaint Management System</h1>
+
+    <div class="container">
+        <div class="search-container"  id="complaint-${complaintId}">
+            <h2>Search Complaint</h2>
+            <label for="complaintId">Complaint ID:</label>
+<input type="text" id="complaintId">
+            <button onclick="searchComplaint()">Search</button>
+            <div id="searchResult"></div>
+            
+
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-container">
+            <h2>Handle Complaint</h2>
+            <label for="complaintid">Complaint ID:</label>
+            <input type="text" id="complaintid">
+            <label for="remark">Remark:</label>
+            <input type="text" id="remark">
+            <div class="button-container">
+                <button onclick="handleComplaint('approve')">Approve</button>
+                <button onclick="handleComplaint('discard')">Discard</button>
+            </div>
+        </div>
+        <div class="form-container">
+            <h2>Resolve Complaint</h2>
+            <label for="resolveId">Complaint ID:</label>
+            <input type="text" id="resolveId">
+            <label for="resolutionRemark">Resolution Remark:</label>
+            <input type="text" id="resolutionRemark">
+            <button onclick="resolveComplaint()">Resolve</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.5/dist/web3.min.js"></script>
+    <script>
+        // JavaScript code to interact with the smart contract functions
+        const provider = window.ethereum;
+
+// Create a new instance of Web3 using the provider object
+        const web3 = new Web3(provider);
+        // Replace with your contract address and ABI
+        const contractABI =[
+  {
+    "type": "constructor",
+    "name": "",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_officer",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ComplaintDiscarded",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "approvalRemark",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "complaintFiled",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "type": "address",
+        "name": "complaintRegisteredBy",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "type": "string",
+        "name": "title",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "Complaints",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "tuple",
+        "name": "generalData",
+        "components": [
+          {
+            "type": "string",
+            "name": "title",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "description",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "contactNumber",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "email",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "incidentLocation",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "date",
+            "internalType": "string"
+          },
+          {
+            "type": "string",
+            "name": "time",
+            "internalType": "string"
+          }
+        ],
+        "internalType": "struct HelloWorld.ComplaintGeneralData"
+      },
+      {
+        "type": "tuple",
+        "name": "approvalData",
+        "components": [
+          {
+            "type": "string",
+            "name": "approvalRemark",
+            "internalType": "string"
+          },
+          {
+            "type": "bool",
+            "name": "isApproved",
+            "internalType": "bool"
+          }
+        ],
+        "internalType": "struct HelloWorld.ComplaintApprovalData"
+      },
+      {
+        "type": "tuple",
+        "name": "resolutionData",
+        "components": [
+          {
+            "type": "string",
+            "name": "resolutionRemark",
+            "internalType": "string"
+          },
+          {
+            "type": "bool",
+            "name": "isResolved",
+            "internalType": "bool"
+          }
+        ],
+        "internalType": "struct HelloWorld.ComplaintResolutionData"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "approveComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "_approvalRemark",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "discardComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "_approvalRemark",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "displayComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "string",
+        "name": "_title",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_description",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_name",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_contactNumber",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_email",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_incidentLocation",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_date",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_time",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "fileComplaint",
+    "inputs": [
+      {
+        "type": "string",
+        "name": "_title",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_description",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_name",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_contactNumber",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_email",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_incidentLocation",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_date",
+        "internalType": "string"
+      },
+      {
+        "type": "string",
+        "name": "_time",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "nextId",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "officer",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "type": "address",
+        "name": "",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingApprovals",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingResolutions",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "resolveComplaint",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "_id",
+        "internalType": "uint256"
+      },
+      {
+        "type": "string",
+        "name": "_resolutionRemark",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "resolvedCases",
+    "inputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "type": "uint256",
+        "name": "",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setOfficerAddress",
+    "inputs": [
+      {
+        "type": "address",
+        "name": "_officer",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+];
+        // Contract address
+        // const contractAddress = '0x2A58878748AE15Caf9e5C6d2596e3bEf14326f83';
+        const contractAddress="0xF6739FBBd457E8C39bB1650ec21c28376235Db3E";
+const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+async function handleComplaint(action) {
+    let idInput, remarkInput;
+
+    if (action === 'approve' || action === 'discard') {
+        idInput = document.getElementById("complaintid");
+        remarkInput = document.getElementById("remark");
+    } else {
+        console.error("Invalid action:", action);
+        return;
+    }
+
+    // Check if either input field is empty
+    console.log("ID input:", idInput.value.trim());
+    console.log("Remark input:", remarkInput.value.trim());
+    if (!idInput.value.trim() || !remarkInput.value.trim()) {
+        console.error("Complaint ID and remark inputs are required.");
+        return;
+    }
+
+    // Call the appropriate contract function based on the action
+    if (action === 'approve') {
+        await callContractFunction("approveComplaint", idInput.value.trim(), remarkInput.value.trim());
+    } else if (action === 'discard') {
+        await callContractFunction("discardComplaint", idInput.value.trim(), remarkInput.value.trim());
+    }
+}
+
+
+async function resolveComplaint() {
+    try {
+        let complaintId = document.getElementById("resolveId").value.trim();
+        let resolutionRemark = document.getElementById("resolutionRemark").value.trim();
+
+        // Check if either input field is empty
+        if (!complaintId || !resolutionRemark) {
+            console.error("Complaint ID and resolution remark inputs are required.");
+            return;
+        }
+
+        // Retrieve the complaint details from the contract
+        let complaint = await callContractFunction("Complaints", complaintId);
+
+        // Check if the complaint has been approved
+        
+
+        // Call the contract function to resolve the complaint
+        await callContractFunction("resolveComplaint", complaintId, resolutionRemark);
+
+        // Optionally, you can update the UI to reflect the resolution status
+        // For example, display a success message or update the complaint status on the UI
+    } catch (error) {
+        console.error(error);
+        alert("Error resolving the complaint");
+    }
+}
+
+
+
+
+
+//         async function approveComplaint() {
+//             const id = document.getElementById("approveId").value;
+//             const approvalRemark = document.getElementById("approvalRemark").value;
+//             await callContractFunction("approveComplaint", id, approvalRemark);
+//         }
+
+//         async function discardComplaint() {
+//             const id = document.getElementById("discardId").value;
+//             const discardRemark = document.getElementById("discardRemark").value;
+//             await callContractFunction("discardComplaint", id, discardRemark);
+//         }
+
+// //         async function approveComplaint() {
+// //     try {
+// //         const id = document.getElementById("approveId").value;
+// //         const approvalRemark = document.getElementById("approvalRemark").value;
+// //         const complaint = await contract.methods.Complaints(id).call();
+
+// //         if (!complaint.exists) {
+// //             throw new Error("Complaint not found");
+// //         }
+
+// //         if (complaint.isResolved || complaint.isApproved) {
+// //             throw new Error("Complaint has already been resolved or approved");
+// //         }
+
+// //         await callContractFunction("approveComplaint", id, approvalRemark);
+// //     } catch (error) {
+// //         displayErrorMessage(error.message);
+// //     }
+// // }
+
+
+async function searchComplaint() {
+    try {
+        let complaintId = document.getElementById("complaintId").value;
+        let complaint = await contract.methods.Complaints(complaintId).call();
+
+        let searchResultDiv = document.getElementById("searchResult");
+        searchResultDiv.innerHTML = `
+            <div class="status-box">
+                <div class="status-render-container md:w-[600px]">
+                    <p class='status-render-title'>Complaint Details:</p>
+                    <p class='status-render-text'>Complaint Id: ${complaintId}</p>
+                    <p class='status-render-text'>Complaint Title: ${complaint.generalData.title}</p>
+                    <p class='status-render-text'>Complaint by: ${complaint.generalData.name}</p>
+                    <p class='status-render-text'>Complaint Description: ${complaint.generalData.description}</p>
+                    <p class='status-render-text'>Contact Number: ${complaint.generalData.contactNumber}</p>
+                    <p class='status-render-text'>Email: ${complaint.generalData.email}</p>
+                    <p class='status-render-text'>Incident Location: ${complaint.generalData.incidentLocation}</p>
+                    <p class='status-render-text'>Date: ${complaint.generalData.date}</p>
+                    <p class='status-render-text'>Time: ${complaint.generalData.time}</p>
+                    <p class='status-render-text'>Approval Status: ${complaint.approvalData.isApproved ? "Approved" : complaint.approvalData.approvalRemark ?"Approval Pending":"Declined" }</p>
+                    <p class='status-render-text'>Approval Remark: ${complaint.approvalData.approvalRemark}</p>
+                    <p class='status-render-text'>Resolution Status: ${complaint.resolutionData.isResolved ? "Resolved" : "Resolution pending"}</p>
+                    <p class='status-render-text'>Resolution Remark: ${complaint.resolutionData.resolutionRemark}</p>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error(error);
+        alert("Error searching for complaint");
+    }     
+  }
+
+// async function searchComplaint() {
+//     try {
+//         // Get the complaint ID from the input field
+//         let complaintId = document.getElementById("searchId").value.trim();
+        
+//         // Check if the complaint ID is empty
+//         if (!complaintId) {
+//             throw new Error("Please enter a valid complaint ID.");
+//         }
+
+//         // Retrieve the complaint details from the contract
+//         let complaint = await contract.methods.complaintDetails(complaintId).call();
+//         let complaintTitle = await contract.methods.ComplaintData(complaintId).call();
+
+//         // Construct the HTML for displaying the complaint details
+//         let searchResultDiv = document.getElementById("searchResult");
+//         searchResultDiv.innerHTML = `
+//             <div class="status-box">
+//                 <div class="status-render-container md:w-[600px]">
+//                     <p class='status-render-title'>Complaint Details:</p>
+//                     <p class='status-render-text'>Complaint Id: ${complaintId}</p>
+//                     <p class='status-render-text'>Complaint by: ${complaintTitle.complaintRegisteredBy}</p>
+//                     <p class='status-render-text'>Complaint Title: ${complaint.title}</p>
+//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
+//                     <p class='status-render-text'>Contact Number: ${complaint.contactNumber}</p>
+//                     <p class='status-render-text'>Email: ${complaint.email}</p>
+//                     <p class='status-render-text'>Incident Location: ${complaint.incidentLocation}</p>
+//                     <p class='status-render-text'>Date: ${complaint.date}</p>
+//                     <p class='status-render-text'>Time: ${complaint.time}</p>
+//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
+//                         <p class='status-render-text'>Approval Status: ${complaint.isApproved ? "Approved" : !complaint.exists ? "Declined" : "Approval Pending"}</p>
+//                         <p class='status-render-text'>Approval Remark: ${complaint.isApproved ? complaint.approvalRemark : ''}</p>
+//                         <p class='status-render-text'>Resolution Status: ${complaint.isResolved ? "Resolved" : "Resolution pending"}</p>
+//                         <p class='status-render-text mb-2'>Resolution Remark: ${complaint.isResolved ? complaint.resolutionRemark : ''}</p>
+//                 </div>
+//             </div>
+//         `;
+//     } catch (error) {
+//         console.error(error);
+//         alert(error.message); // Display the error message in an alert
+//     }
+// }
+
+
+        async function callContractFunction(funcName, ...args) {
+            try {
+                const web3 = new Web3(window.ethereum);
+                const accounts = await web3.eth.requestAccounts();
+                const contract = new web3.eth.Contract(contractABI, contractAddress);
+                const account = accounts[0];
+
+                if (funcName === "Complaints") {
+                    return await contract.methods[funcName](...args).call();
+                } else {
+                    const result = await contract.methods[funcName](...args).send({ from: account });
+                    return result;
+                }
+            } catch (error) {
+                throw new Error(error.message);
+            }
+        }
+
+        function displayErrorMessage(message) {
+            const errorMessage = document.getElementById("errorMessage");
+            errorMessage.innerText = message;
+            errorMessage.style.display = "block";
+            setTimeout(() => {
+                errorMessage.style.display = "none";
+            }, 5000);
+        }
+        // Listen for the complaintApproved event
+contract.events.complaintApproved()
+    .on('data', function(event){
+        console.log(event); // Log the event object for debugging
+        // Update the UI to reflect the approval status
+        updateUIWithApprovalStatus(event.returnValues.id, "Approved");
+    })
+    .on('error', console.error);
+
+// Listen for the complaintDiscarded event
+contract.events.complaintDiscarded()
+    .on('data', function(event){
+        console.log(event); // Log the event object for debugging
+        // Update the UI to reflect the rejection status
+        updateUIWithApprovalStatus(event.returnValues.id, "Declined");
+    })
+    .on('error', console.error);
+
+// Function to update UI with approval status
+function updateUIWithApprovalStatus(id, status) {
+    // Find the status-render-text element with the corresponding complaint ID
+    let statusElement = document.querySelector(`#complaint-${id} .status-render-text`);
+
+    // Update the inner HTML to reflect the approval status
+    if (statusElement) {
+        statusElement.textContent = `Approval Status: ${status}`;
+    }
+}
+
+    </script>
+</body>
+</html>
