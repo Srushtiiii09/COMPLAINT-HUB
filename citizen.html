@@ -671,42 +671,6 @@
             }
         }
 
-//         async function searchComplaint() {
-//     try {
-//         let complaintId = document.getElementById("complaintId").value;
-//         let complaint = await contract.methods.complaintDetails(complaintId).call();
-//         let complainttitle = await contract.methods.Complaints(complaintId).call();
-
-//         let searchResultDiv = document.getElementById("searchResult");
-//         searchResultDiv.innerHTML = `
-//             <div class="status-box">
-//                 <div class="status-render-container md:w-[600px]">
-//                     <p class='status-render-title'>Complaint Details:</p>
-//                     <p class='status-render-text'>Complaint Id: ${complaintId}</p>
-//                     <p class='status-render-text'>Complaint by: ${complainttitle.complaintRegisteredBy}</p>
-//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
-//                     <p class='status-render-text'>Complaint by: ${complaint.name}</p>
-//                     <p class='status-render-text'>Complaint Title: ${complaint.title}</p>
-//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
-//                     <p class='status-render-text'>Contact Number: ${complaint.contactNumber}</p>
-//                     <p class='status-render-text'>Email: ${complaint.email}</p>
-//                     <p class='status-render-text'>Incident Location: ${complaint.incidentLocation}</p>
-//                     <p class='status-render-text'>Date: ${complaint.date}</p>
-//                     <p class='status-render-text'>Time: ${complaint.time}</p>
-//                     <p class='status-render-text'>Complaint Description: ${complaint.description}</p>
-//                         <p class='status-render-text'>Approval Status: ${complaint.isApproved ? "Approved" : !complaint.exists ? "Declined" : "Approval Pending"}</p>
-//                         <p class='status-render-text'>Approval Remark: ${complaint.isApproved ? complaint.approvalRemark : ''}</p>
-//                         <p class='status-render-text'>Resolution Status: ${complaint.isResolved ? "Resolved" : "Resolution pending"}</p>
-//                         <p class='status-render-text mb-2'>Resolution Remark: ${complaint.isResolved ? complaint.resolutionRemark : ''}</p>
-//                 </div>
-//             </div>
-//         `;
-//     } catch (error) {
-//         console.error(error);
-//         alert("Error searching for complaint");
-//     }
-// }
-
 async function searchComplaint() {
     try {
         let complaintId = document.getElementById("complaintId").value;
@@ -732,7 +696,7 @@ async function searchComplaint() {
                     <p class='status-render-text'>Resolution Remark: ${complaint.resolutionData.resolutionRemark}</p>
                 </div>
             </div>
-        `;
+        ';
     } catch (error) {
         console.error(error);
         alert("Error searching for complaint");
