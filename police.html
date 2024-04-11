@@ -158,6 +158,8 @@
 <input type="text" id="complaintId">
             <button onclick="searchComplaint()">Search</button>
             <div id="searchResult"></div>
+            <button onclick="printComplaint()">Print Complaint Details</button>
+
             
 
         </div>
@@ -847,6 +849,20 @@ function updateUIWithApprovalStatus(id, status) {
         statusElement.textContent = `Approval Status: ${status}`;
     }
 }
+         function printComplaint() {
+            // Retrieve the search result container
+            let searchResultDiv = document.getElementById("searchResult");
+            // Retrieve the HTML content of the container
+            let content = searchResultDiv.innerHTML;
+            // Open a new window
+            let printWindow = window.open('', '_blank');
+            // Write the content to the new window
+            printWindow.document.write(content);
+            // Trigger printing
+            printWindow.print();
+            // Close the new window
+            printWindow.close();
+        }
 
     </script>
 </body>
