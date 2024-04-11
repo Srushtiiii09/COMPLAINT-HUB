@@ -711,7 +711,8 @@ async function searchComplaint() {
     try {
         let complaintId = document.getElementById("complaintId").value;
         let complaint = await contract.methods.Complaints(complaintId).call();
-
+        let nextId = await contract.methods.nextId().call();
+        if ( complaintId < nextId){
         let searchResultDiv = document.getElementById("searchResult");
         searchResultDiv.innerHTML = `
             <div class="status-box">
@@ -742,6 +743,10 @@ async function searchComplaint() {
         console.error(error);
         alert("Error searching for complaint");
     }
+}
+else{
+    alert("Complaint does not exist");
+}
 }
 
 
