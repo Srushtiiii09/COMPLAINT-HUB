@@ -712,42 +712,43 @@ async function searchComplaint() {
         let complaintId = document.getElementById("complaintId").value;
         let complaint = await contract.methods.Complaints(complaintId).call();
         let nextId = await contract.methods.nextId().call();
-        if ( complaintId < nextId){
-        let searchResultDiv = document.getElementById("searchResult");
-        searchResultDiv.innerHTML = `
-            <div class="status-box">
-                <div class="status-render-container md:w-[600px]">
-                    <p class='status-render-title'>Complaint Details:</p>
-                    <p class='status-render-text'>Complaint Id: ${complaintId}</p>
-                    <p class='status-render-text'>Complaint Title: ${complaint.generalData.title}</p>
-                    <p class='status-render-text'>Complaint by: ${complaint.generalData.name}</p>
-                    <p class='status-render-text'>Complaint Description: ${complaint.generalData.description}</p>
-                    <p class='status-render-text'>Contact Number: ${complaint.generalData.contactNumber}</p>
-                    <p class='status-render-text'>Email: ${complaint.generalData.email}</p>
-                    <p class='status-render-text'>Incident Location: ${complaint.generalData.incidentLocation}</p>
-                    <p class='status-render-text'>Date: ${complaint.generalData.date}</p>
-                    <p class='status-render-text'>Time: ${complaint.generalData.time}</p>
-                    <p class='status-render-text'>
-    Approval Status: 
-    ${
-        complaint.approvalData.isApproved ? "Approved" :
-        complaint.approvalData.approvalRemark ? "Approval Pending" : ""
-    }
-</p>                    <p class='status-render-text'>Approval Remark: ${complaint.approvalData.approvalRemark}</p>
-                    <p class='status-render-text'>Resolution Status: ${complaint.resolutionData.isResolved ? "Resolved" : "Resolution pending"}</p>
-                    <p class='status-render-text'>Resolution Remark: ${complaint.resolutionData.resolutionRemark}</p>
+        if (complaintId < nextId) {
+            let searchResultDiv = document.getElementById("searchResult");
+            searchResultDiv.innerHTML = `
+                <div class="status-box">
+                    <div class="status-render-container md:w-[600px]">
+                        <p class='status-render-title'>Complaint Details:</p>
+                        <p class='status-render-text'>Complaint Id: ${complaintId}</p>
+                        <p class='status-render-text'>Complaint Title: ${complaint.generalData.title}</p>
+                        <p class='status-render-text'>Complaint by: ${complaint.generalData.name}</p>
+                        <p class='status-render-text'>Complaint Description: ${complaint.generalData.description}</p>
+                        <p class='status-render-text'>Contact Number: ${complaint.generalData.contactNumber}</p>
+                        <p class='status-render-text'>Email: ${complaint.generalData.email}</p>
+                        <p class='status-render-text'>Incident Location: ${complaint.generalData.incidentLocation}</p>
+                        <p class='status-render-text'>Date: ${complaint.generalData.date}</p>
+                        <p class='status-render-text'>Time: ${complaint.generalData.time}</p>
+                        <p class='status-render-text'>
+                            Approval Status: 
+                            ${
+                                complaint.approvalData.isApproved ? "Approved" :
+                                complaint.approvalData.approvalRemark ? "Approval Pending" : ""
+                            }
+                        </p>
+                        <p class='status-render-text'>Approval Remark: ${complaint.approvalData.approvalRemark}</p>
+                        <p class='status-render-text'>Resolution Status: ${complaint.resolutionData.isResolved ? "Resolved" : "Resolution pending"}</p>
+                        <p class='status-render-text'>Resolution Remark: ${complaint.resolutionData.resolutionRemark}</p>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            alert("Complaint does not exist");
+        }
     } catch (error) {
         console.error(error);
         alert("Error searching for complaint");
     }
 }
-else{
-    alert("Complaint does not exist");
-}
-}
+
 
 
     </script>
