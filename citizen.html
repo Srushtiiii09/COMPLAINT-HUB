@@ -183,7 +183,6 @@
               <h2>Complaint Status</h2>
               <div id="complaintStatus"></div>
               <div id="searchResult"></div>
-             <button onclick="printComplaint()">Print Complaint Details</button>
 
           </form>
       </div>
@@ -751,20 +750,7 @@ async function searchComplaint() {
     }
 }
         
- function printComplaint() {
-            // Retrieve the search result container
-            let searchResultDiv = document.getElementById("searchResult");
-            // Retrieve the HTML content of the container
-            let content = searchResultDiv.innerHTML;
-            // Open a new window
-            let printWindow = window.open('', '_blank');
-            // Write the content to the new window
-            printWindow.document.write(content);
-            // Trigger printing
-            printWindow.print();
-            // Close the new window
-            printWindow.close();
-        }
+
 
 
     </script>
