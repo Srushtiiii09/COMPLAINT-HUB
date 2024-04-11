@@ -711,9 +711,9 @@
 async function searchComplaint() {
     try {
         let complaintId = document.getElementById("complaintId").value;
-        let complaint = await contract.methods.Complaints(complaintId).call();
         let nextId = await contract.methods.nextId().call();
-        if (complaintId < nextId) {
+        let complaint = await contract.methods.Complaints(complaintId).call();
+        if (parseInt(complaintId) < parseInt(nextId)) {
             let searchResultDiv = document.getElementById("searchResult");
             searchResultDiv.innerHTML = `
                 <div class="status-box">
