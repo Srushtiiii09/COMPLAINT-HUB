@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Result</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .result-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-bottom: 20px;
+            max-width: 600px; /* Limit width for better layout */
+        }
+        .result {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .confidence {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .download-link {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .download-link:hover {
+            background-color: #0056b3;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 16px;
+            text-decoration: underline;
+            color: #007bff;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #0056b3;
+        }
+        video {
+            width: 100%; /* Full width for responsive design */
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Processing Result</h1>
+    <div class="result-container">
+        <p class="result"><strong>Prediction:</strong> {{ prediction }}</p>
+        <p class="result confidence"><strong>Confidence:</strong> {{ confidence }}%</p>
+        <p class="result"><strong>Processed Video:</strong></p>
+        
+        <!-- Video player to display the processed video -->
+        <video controls>
+            <source src="{{ processed_video_path }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <a class="download-link" href="{{ processed_video_path }}" download>Download Processed Video <i class="fas fa-download"></i></a>
+        <a class="back-link" href="/">Upload another video</a>
+    </div>
+</body>
+</html>
